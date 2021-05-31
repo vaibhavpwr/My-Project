@@ -1,0 +1,197 @@
+#include <DHT.h>
+#include <LiquidCrystal.h>
+#include <SoftwareSerial.h>
+
+LiquidCrystal lcd(2, 3, 4, 5, 6, 7);
+
+
+#define dht_dpin A1 
+#define LVL A0 
+#define vibra A3
+#define DHTTYPE DHT11
+DHT dht(dht_dpin,DHTTYPE,11);
+int value; 
+int output_value; 
+int temperature; 
+int levelflag = 0;  
+int vibrationflag = 0; 
+int tempflag = 0; 
+int check; 
+int test, test1; 
+byte degree[8] = { 0b00011, 0b00011, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000 };
+
+void setup()
+
+{ 
+Serial.begin(9600); //Initialise serial to communicate with GSM Modem 
+lcd.begin(16, 2); 
+pinMode(vibra, INPUT); 
+lcd.createChar(1, degree); 
+lcd.setCursor(0, 0); 
+lcd.print("Plant Health"); 
+lcd.setCursor(0, 1); 
+lcd.print("Monitering"); 
+delay(1000); 
+lcd.clear(); 
+lcd.setCursor(0, 0); 
+lcd.print("PROJECT"); 
+lcd.setCursor(0, 1); 
+lcd.print("By VAIBHAV PAWAR"); 
+delay(1000);  
+lcd.clear();
+ }
+ 
+void loop() 
+{ 
+  output_value = analogRead(vibra); 
+  output_value = map(output_value, 550, 0, 0, 100);
+  value = analogRead(LVL);  
+  delay(10000); //Give enough time for GSM to register on Network 
+  dht.readTemperature(dht_dpin); 
+  lcd.clear(); 
+  lcd.setCursor(0, 0); 
+  lcd.print("Temp"); 
+  lcd.setCursor(0, 1); 
+  lcd.print(temperature = dht.readTemperature(dht_dpin)); // Temp data on LCD 
+  lcd.write(1); 
+  lcd.print(" C"); 
+  delay(1000); 
+  lcd.clear(); 
+  lcd.setCursor(0, 0); 
+  lcd.print("Level"); 
+  lcd.setCursor(0, 1);
+  lcd.print(value); // Light data on LCD 
+  lcd.print("LVL"); 
+  delay(1000); 
+  lcd.clear(); 
+  lcd.setCursor(0, 0); 
+  lcd.print("Vibration"); 
+  lcd.setCursor(0, 1); 
+  lcd.print(output_value); // Soil data on LCD 
+  lcd.print(" %");
+  delay(1000); 
+  lcd.clear();
+
+
+if (temperature > 40) 
+{ 
+  SendSMS1(); // SMS for Temp high
+} 
+
+if (value> 100) 
+{ 
+  SendSMS2(); // SMS for Light high 
+} 
+
+if (output_value > 950)
+  { 
+    SendSMS3(); // SMS for Wet Soil
+    } 
+    } 
+    
+ void SendSMS1()
+    { 
+      if (tempflag == 0)
+    { 
+    Serial.println("AT+CMGF=1"); 
+    delay(500); 
+    Serial.println("AT+CMGS=\"+919979897404\"\r");
+    delay(500); 
+    Serial.print("Temp High,"); 
+    Serial.print(" Temp "); 
+    Serial.print(temperature); 
+    Serial.println(" degree C"); 
+    Serial.println((char)26); 
+    lcd.setCursor(0, 0); 
+    lcd.print("Temp High "); 
+    delay(1000); 
+    lcd.clear(); 
+    lcd.setCursor(0, 0); 
+    lcd.print("Temperature"); 
+    lcd.setCursor(0, 1); 
+    lcd.print(temperature); 
+    lcd.write(1); 
+    lcd.print("C"); 
+    delay(1000); 
+    lcd.clear(); 
+    lcd.setCursor(0, 0); 
+    lcd.print("Sending SMS");
+    delay(1000); 
+    lcd.clear(); 
+    tempflag = 1; 
+    check = 0; 
+    test = 0; 
+    delay(10); 
+    } 
+    } 
+    
+  void SendSMS2()
+  { 
+    if 
+    (levelflag == 0) 
+    { 
+      Serial.println("AT+CMGF=1"); //To send SMS in Text Mode 
+      delay(500); 
+      Serial.println("AT+CMGS=\"+919979897404\"\r"); //Change to destination phone number 
+      delay(500); 
+      Serial.print("Good Level,"); 
+      Serial.print(" of water "); 
+      Serial.print(output_value); 
+      Serial.println(" LVL"); 
+      Serial.println((char)26); //the stopping character Ctrl+Z 
+      lcd.setCursor(0, 0); 
+      lcd.print("Good level "); 
+      delay(1000); lcd.clear(); 
+      lcd.setCursor(0, 0); 
+      lcd.print("of water"); 
+      lcd.setCursor(0, 1); 
+      lcd.print(output_value); 
+      lcd.print("LVL"); 
+      delay(1000); 
+      lcd.clear(); 
+      lcd.setCursor(0, 0); 
+      lcd.print("Sending SMS"); 
+      delay(1000); 
+      lcd.clear(); 
+      levelflag = 1; 
+      check = 0; 
+      test = 0; 
+      delay(10);
+      } 
+      } 
+      
+void SendSMS3()
+{ 
+  if (vibrationflag == 0) 
+{ 
+  Serial.println("AT+CMGF=1"); 
+  delay(500); 
+  Serial.println("AT+CMGS=\"+919979897404\"\r"); 
+  delay(500); 
+  Serial.print("vibration high,"); 
+  Serial.print(" vibration "); 
+  Serial.print(output_value); 
+  Serial.println(" %"); 
+  Serial.println((char)26);
+  lcd.setCursor(0, 0); 
+  lcd.print("vibration high");
+  delay(1000);
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("vibration");
+  lcd.setCursor(0, 1);
+  lcd.print(output_value); 
+  lcd.print(" %"); 
+  delay(1000); 
+  lcd.clear(); 
+  lcd.setCursor(0, 0); 
+  lcd.print("Sending SMS");
+  delay(1000); 
+  lcd.clear();
+  vibrationflag = 1; 
+  check = 0; 
+  test = 0;
+  delay(10); 
+  } 
+  } 
+  

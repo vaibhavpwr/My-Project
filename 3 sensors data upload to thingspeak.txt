@@ -1,0 +1,141 @@
+//https://forum.arduino.cc/index.php?topic=624456.0//
+
+#include <SoftwareSerial.h>
+
+
+SoftwareSerial gsm(11, 10); //RX, TX
+#define lm35 A0
+#define vibra A1
+#define levelsens A2
+
+int temp,value;
+int vibrationvalue=0;
+int levelvalue=0;
+int temperature=0;
+void ShowSerialData()
+{
+  while (gsm.available() != 0)
+    Serial.write(gsm.read());
+}
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(vibra, INPUT);
+  pinMode(levelsens, INPUT);
+  pinMode(lm35, INPUT);
+  
+  gsm.begin(9600);
+  falan();
+  singlecon();
+}
+
+void loop() {
+
+  value = analogRead(lm35);//LM35 temperature sensor calibration
+  temp = (value / 1024.0)*25;
+  vibrationvalue = analogRead(vibra);
+  levelvalue=analogRead(levelsens);
+  delay(500);
+  Serial.print("vibration: ");
+  Serial.print(vibrationvalue, 1);
+  Serial.print(" hz\n");
+  Serial.print("water level: ");
+  Serial.print(levelvalue, 1);
+  Serial.print(" mm\n");
+  Serial.print("temperature value: ");
+  Serial.print(temp, 1);
+  Serial.print(" *C\n");
+  delay(500);
+  ShowSerialData();
+  falan();
+  singlecon();
+  ShowSerialData();
+}
+void falan()
+{
+  Serial.println("Please Wait...");
+  gsm.println("AT");
+  delay(1000);
+  ShowSerialData();
+  gsm.println("AT+CPIN?");
+  delay(1000);
+  ShowSerialData();
+  gsm.println("AT+CREG?");
+  delay(1000);
+  ShowSerialData();
+  gsm.println("AT+CIPSHUT");
+  delay(1000);
+  ShowSerialData();
+  gsm.println("AT+CIPSTATUS");
+
+  delay(1000);
+  ShowSerialData();
+}
+void singlecon()
+{
+  Serial.println("Sending Data To Cloud...");
+  gsm.println("AT+CIPMUX=0");
+  delay(1000);
+  ShowSerialData();
+  gsm.print("AT+CSTT=");
+  gsm.print('"');
+  gsm.print("internet");
+  gsm.println('"');
+  delay(1000);
+  ShowSerialData();
+  gsm.println("AT+CIICR");
+  delay(1000);
+
+  ShowSerialData();
+  gsm.println("AT+CIFSR");
+  delay(1000);
+
+  ShowSerialData();
+  gsm.print("AT+CIPSTART=");
+  gsm.print('"');
+  gsm.print("TCP");
+  gsm.print('"');
+  gsm.print(',');
+  gsm.print('"');
+  gsm.print("api.thingspeak.com");
+  gsm.print('"');
+  gsm.print(',');
+  gsm.print("80");
+  gsm.write(0x0d);
+  gsm.write(0x0a);
+  delay(2000);
+  ShowSerialData();
+  gsm.println("AT+CIPSEND");
+  delay(5000);
+  ShowSerialData();
+  gsm.print("GET");
+  gsm.print(' ');
+  //gsm.print("http:");
+  //gsm.print('/');
+  //gsm.print('/');
+  //gsm.print("api.thingspeak.com");
+  gsm.print('/');
+  gsm.print("update?api_key=");
+  gsm.print("TW0CD2WM7DXTCBTY");//my API Key
+  gsm.print("&field1=");
+  gsm.print(vibrationvalue);
+  gsm.print("&field2=");
+  gsm.print(levelvalue);
+  gsm.print("&field3=");
+  gsm.print(temp);
+ 
+  gsm.write(0x0d);
+  gsm.write(0x0a);
+
+  gsm.write(0x1a); // the trick is here to send the request. Its Ctrl+Z to start send process.
+  delay(1000);
+
+  ShowSerialData();
+
+  gsm.println("AT+CIPSHUT");
+  gsm.println("AT+CIPCLOSE");
+  gsm.write(0x0d);
+  gsm.write(0x0a);
+  delay(30000);
+  ShowSerialData();
+}

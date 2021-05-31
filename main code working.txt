@@ -1,0 +1,378 @@
+#include "DHT.h"
+
+#include
+
+LiquidCrystal lcd(2, 3, 4, 5, 6, 7);
+
+dht DHT; 
+#define dht_dpin A1 
+#define LUX A0 
+#define soil A3
+
+float volt, lux, value; 
+int output_value ; 
+int temperature, humidity; 
+int lightflag = 0; 
+int humflag = 0; 
+int soilflag = 0; 
+int tempflag = 0; 
+int check; 
+int test, test1; 
+byte degree[8] = { 0b00011, 0b00011, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000 };
+
+void setup()
+
+{ 
+  Serial.begin(9600); //Initialise serial to communicate with GSM Modem 
+}
+lcd.begin(16, 2); 
+pinMode(soil, INPUT); 
+lcd.createChar(1, degree); 
+lcd.setCursor(0, 0); 
+lcd.print("Plant Health"); 
+lcd.setCursor(0, 1); 
+lcd.print("Monitering"); 
+delay(1000); lcd.clear(); 
+lcd.setCursor(0, 0); 
+lcd.print("AGRI PROJECT"); 
+lcd.setCursor(0, 1); 
+lcd.print("By S K CHHAYA"); 
+delay(1000); 
+lcd.clear(); 
+} 
+void loop() 
+{ 
+  output_value = analogRead(soil); 
+  output_value = map(output_value, 550, 0, 0, 100); 
+  value = analogRead(LUX); 
+  volt = (value / 1023.0) * 5; 
+  lux = ((2500 / volt) - 500) / 3.3; 
+  delay(10000); //Give enough time for GSM to register on Network 
+  DHT.read11(dht_dpin); 
+  lcd.clear();
+  lcd.setCursor(0, 0); 
+  lcd.print("Temp"); 
+  lcd.setCursor(0, 1); 
+  lcd.print(temperature = DHT.temperature); // Temp data on LCD 
+  lcd.write(1); 
+  lcd.print(" C"); 
+  delay(1000); 
+  lcd.clear(); 
+  lcd.setCursor(0, 0); 
+  lcd.print("Humidity"); 
+  lcd.setCursor(0, 1); 
+  lcd.print(humidity = DHT.humidity); // Humidity data on LCD 
+  lcd.print(" %"); 
+  delay(1000); 
+  lcd.clear(); 
+  lcd.setCursor(0, 0); 
+  lcd.print("Light"); 
+  lcd.setCursor(0, 1);
+  lcd.print(lux); // Light data on LCD 
+  lcd.print(" LUM"); 
+  delay(1000); 
+  lcd.clear(); 
+  lcd.setCursor(0, 0); 
+  lcd.print("Moisture"); 
+  lcd.setCursor(0, 1); 
+  lcd.print(output_value); // Soil data on LCD 
+  lcd.print(" %");
+  delay(1000); 
+  lcd.clear();
+}
+
+if 
+(temperature < 40) 
+{ SendSMS1(); // SMS for Temp low 
+} 
+else if 
+(temperature > 40) 
+{ SendSMS(); // SMS for Temp high
+} 
+if (humidity < 40) 
+{ SendSMS3(); // SMS for Humidity low
+} else if (humidity > 40) 
+{ SendSMS2(); // SMS for Humidity high
+} 
+if (lux < 100) 
+{ SendSMS5(); // SMS for Light low 
+} 
+else if (lux > 100) 
+{ SendSMS4(); // SMS for Light high 
+} 
+if (output_value == 950) 
+{ 
+  SendSMS7(); // SMS for Dry Soil 
+  } 
+  else if (output_value != 950)
+  { 
+    SendSMS6(); // SMS for Wet Soil
+    } 
+    } 
+    void SendSMS()
+    { if (tempflag == 0)
+    { Serial.println("AT+CMGF=1"); 
+    delay(500); 
+    Serial.println("AT+CMGS=\"+919979897404\"\r");
+    delay(500); 
+    Serial.print("Temp High,"); 
+    Serial.print(" Temp "); 
+    Serial.print(temperature); 
+    Serial.println(" degree C"); 
+    Serial.println((char)26); 
+    lcd.setCursor(0, 0); 
+    lcd.print("Temp High "); 
+    delay(1000); lcd.clear(); 
+    lcd.setCursor(0, 0); 
+    lcd.print("Temperature"); 
+    lcd.setCursor(0, 1); 
+    lcd.print(temperature); 
+    lcd.write(1); 
+    lcd.print("C"); 
+    delay(1000); 
+    lcd.clear(); 
+    lcd.setCursor(0, 0); 
+    lcd.print("Sending SMS");
+    delay(1000); 
+    lcd.clear(); 
+    tempflag = 1; 
+    check = 0; 
+    test = 0; 
+    delay(10); 
+    } 
+    } 
+    void SendSMS1()
+    { 
+      if (tempflag == 1) 
+      { 
+        Serial.println("AT+CMGF=1"); 
+        delay(500); 
+        Serial.println("AT+CMGS=\"+919979897404\"\r"); 
+        delay(500); 
+        Serial.print("Temp Low,"); 
+        Serial.print(" Temp "); 
+        Serial.print(temperature); 
+        Serial.println(" degree C");
+        Serial.println((char)26); 
+        lcd.setCursor(0, 0); 
+        lcd.print("Temp Low "); 
+        delay(1000); 
+        lcd.clear(); 
+        lcd.setCursor(0, 0); 
+        lcd.print("Temperature"); 
+        lcd.setCursor(0, 1); 
+        lcd.print(temperature); 
+        lcd.write(1); 
+        lcd.print("C"); 
+        delay(1000); 
+        lcd.clear(); 
+        lcd.setCursor(0, 0); 
+        lcd.print("Sending SMS"); 
+        delay(1000); 
+        lcd.clear(); 
+        tempflag = 0; 
+        check = 0; 
+        test = 0; 
+        delay(10); 
+        } 
+        } 
+        void SendSMS2() 
+        {
+          if (humflag == 0) 
+          { 
+            Serial.println("AT+CMGF=1");
+            delay(500); 
+            Serial.println("AT+CMGS=\"+919979897404\"\r"); 
+            delay(500); 
+            Serial.print("Humidity High"); 
+            Serial.print(humidity); 
+            Serial.println(" %"); 
+            Serial.println((char)26); 
+            lcd.setCursor(0, 0); 
+            lcd.print("Humidity High"); 
+            delay(1000); 
+            lcd.setCursor(0, 1); 
+            lcd.print("Humidity "); 
+            lcd.print(humidity); 
+            lcd.print(" %"); 
+            delay(1000); 
+            lcd.clear(); 
+            lcd.setCursor(0, 0); 
+            lcd.print("Sending SMS");
+            delay(1000); 
+            lcd.clear(); 
+            humflag = 1; 
+            check = 0; 
+            test = 0; 
+            delay(10); 
+            } 
+            }
+  }
+}
+
+void SendSMS3()
+{ 
+  if 
+(humflag == 1) 
+{ 
+  Serial.println("AT+CMGF=1"); 
+  delay(500); 
+  Serial.println("AT+CMGS=\"+919979897404\"\r"); 
+  delay(500); 
+  Serial.print("Low Humidity,"); 
+  Serial.print(" Humidity "); 
+  Serial.print(humidity); 
+  Serial.println(" %"); 
+  Serial.println((char)26); 
+  lcd.setCursor(0, 0); 
+  lcd.print("Low Humidity"); 
+  delay(1000); lcd.clear(); 
+  lcd.setCursor(0, 0); 
+  lcd.print("Humidity"); 
+  lcd.setCursor(0, 1); 
+  lcd.print(humidity); 
+  lcd.print(" %"); 
+  delay(1000); 
+  lcd.clear(); 
+  lcd.setCursor(0, 0); 
+  lcd.print("Sending SMS"); 
+  delay(1000); 
+  lcd.clear(); 
+  humflag = 0; 
+  check = 0; 
+  test = 0; 
+  delay(10); 
+  } 
+  } 
+  void SendSMS4()
+  { 
+    if 
+    (lightflag == 0) 
+    { 
+      Serial.println("AT+CMGF=1"); //To send SMS in Text Mode 
+      delay(500); 
+      Serial.println("AT+CMGS=\"+919979897404\"\r"); //Change to destination phone number 
+      delay(500); 
+      Serial.print("Good LIGHT,"); 
+      Serial.print(" Intensity "); 
+      Serial.print(lux); 
+      Serial.println(" LUX"); 
+      Serial.println((char)26); //the stopping character Ctrl+Z 
+      lcd.setCursor(0, 0); 
+      lcd.print("Good light "); 
+      delay(1000); lcd.clear(); 
+      lcd.setCursor(0, 0); 
+      lcd.print("Intensity"); 
+      lcd.setCursor(0, 1); 
+      lcd.print(lux); 
+      lcd.print(" LUX"); 
+      delay(1000); 
+      lcd.clear(); 
+      lcd.setCursor(0, 0); 
+      lcd.print("Sending SMS"); 
+      delay(1000); 
+      lcd.clear(); 
+      lightflag = 1; 
+      check = 0; 
+      test = 0; 
+      delay(10);
+      } 
+      } 
+      void SendSMS5() 
+      { 
+        if (lightflag == 1) 
+        { Serial.println("AT+CMGF=1"); 
+        delay(500); 
+        Serial.println("AT+CMGS=\"+919979897404\"\r"); 
+        delay(500); Serial.print("LOW LIGHT,"); 
+        Serial.print(" Intensity "); 
+        Serial.print(lux);
+Serial.println(" LUX"); 
+Serial.println((char)26); 
+lcd.setCursor(0, 0); 
+lcd.print("Low light "); 
+delay(1000); lcd.clear(); 
+lcd.setCursor(0, 0); 
+lcd.print("Intensity"); 
+lcd.setCursor(0, 1); 
+lcd.print(lux); 
+lcd.print(" LUX"); 
+delay(1000); 
+lcd.clear(); 
+lcd.setCursor(0, 0); 
+lcd.print("Sending SMS"); 
+delay(1000); 
+lcd.clear(); 
+lightflag = 0; 
+check = 0; 
+test = 0; 
+delay(10); 
+} 
+} 
+void SendSMS6()
+{ 
+  if (soilflag == 0) 
+{ 
+  Serial.println("AT+CMGF=1"); 
+  delay(500); 
+  Serial.println("AT+CMGS=\"+919979897404\"\r"); 
+  delay(500); 
+  Serial.print("Dry Soil,"); 
+  Serial.print(" Moisture "); 
+  Serial.print(output_value); 
+  Serial.println(" %"); 
+  Serial.println((char)26);
+  lcd.setCursor(0, 0); 
+  lcd.print("Dry Soil");
+  delay(1000);
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Moisture");
+  lcd.setCursor(0, 1);
+  lcd.print(output_value); 
+  lcd.print(" %"); 
+  delay(1000); 
+  lcd.clear(); 
+  lcd.setCursor(0, 0); 
+  lcd.print("Sending SMS");
+  delay(1000); lcd.clear();
+  soilflag = 1; 
+  check = 0; 
+  test = 0;
+  delay(10); 
+  } 
+  } 
+  void SendSMS7() 
+  { 
+    if (soilflag == 1) 
+    { Serial.println("AT+CMGF=1"); 
+    delay(500); 
+    Serial.println("AT+CMGS=\"+919979897404\"\r");
+    delay(500); 
+    Serial.print("Wet Soil,");
+    Serial.print(" Moisture "); 
+    Serial.print(output_value); 
+    Serial.println(" %"); 
+    Serial.println((char)26); 
+    lcd.clear(); 
+    lcd.setCursor(0, 0); 
+    lcd.print("Wet Soil"); 
+    delay(1000); 
+    lcd.clear(); 
+    lcd.setCursor(0, 0); 
+    lcd.print("Moisture"); 
+    lcd.setCursor(0, 1); 
+    lcd.print(output_value);
+    lcd.print(" %"); 
+    delay(1000); 
+    lcd.clear(); 
+    lcd.setCursor(0, 0); 
+    lcd.print("Sending SMS");
+    delay(1000); 
+    lcd.clear(); 
+    soilflag = 0; 
+    check = 0;
+    test = 0; 
+    delay(10);
+    }
+    }
